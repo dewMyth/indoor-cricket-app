@@ -172,6 +172,13 @@ export default function MatchSummary() {
           {isExporting ? "Exporting..." : "Export Match Report"}
         </button>
 
+        <button
+          onClick={() => navigate(`/history/${match.id}`)}
+          className="btn-secondary w-full"
+        >
+          View Full Scorecard
+        </button>
+
         <button onClick={handleRematch} className="btn-secondary w-full">
           Rematch with Same Teams
         </button>

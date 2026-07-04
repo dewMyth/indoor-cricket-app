@@ -9,11 +9,11 @@ import {
   orderBy,
   deleteDoc,
   serverTimestamp,
-} from 'firebase/firestore';
-import { db } from './config';
-import type { MatchState, MatchHistorySummary } from '@/types';
+} from "firebase/firestore";
+import { db } from "./config";
+import type { MatchState, MatchHistorySummary } from "@/types";
 
-const MATCHES_COLLECTION = 'matches';
+const MATCHES_COLLECTION = "matches";
 
 /** Save (create or update) the full match document. Called after every ball for auto-save. */
 export async function saveMatch(match: MatchState): Promise<void> {
@@ -36,13 +36,20 @@ export async function getMatch(matchId: string): Promise<MatchState | null> {
   return snap.data() as MatchState;
 }
 
-export async function getMatchHistory(ownerUid: string): Promise<MatchHistorySummary[]> {
+export async function getMatchHistory(
+  ownerUid: string,
+): Promise<MatchHistorySummary[]> {
   const q = query(
     collection(db, MATCHES_COLLECTION),
-    where('ownerUid', '==', ownerUid),
-    orderBy('createdAtISO', 'desc'),
+    where("ownerUid", "==", ownerUid),
+    orderBy("createdAtISO", "desc"),
   );
-  const snap = await getDocs(q);
+  console.log("Fetch started match history for", ownerUid, "matches");
+  const snap = await getDocs(q).catch((err) => {
+    console.error("Error fetching match history for", ownerUid, err);
+    throw err;
+  });
+  console.log("Fetched match history for", ownerUid, snap.size, "matches");
   return snap.docs.map((d) => {
     const data = d.data() as MatchState;
     return summarizeMatch(data);
@@ -53,7 +60,7 @@ export function summarizeMatch(match: MatchState): MatchHistorySummary {
   const finalInnings = match.innings2 ?? match.innings1;
   const scoreLabel = finalInnings
     ? `${finalInnings.totalRuns}/${finalInnings.totalWickets}`
-    : 'Not started';
+    : "Not started";
   const winnerName =
     match.winnerTeamId === match.teamA.id
       ? match.teamA.name

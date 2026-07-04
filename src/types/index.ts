@@ -21,28 +21,28 @@ export interface Team {
 
 // ---------- Ball events ----------
 export type BallOutcome =
-  | 'DOT'
-  | 'RUN_1'
-  | 'RUN_2'
-  | 'RUN_3'
-  | 'RUN_4'
-  | 'RUN_5'
-  | 'RUN_6'
-  | 'WICKET'
-  | 'WIDE'
-  | 'NO_BALL'
-  | 'BYE'
-  | 'LEG_BYE'
-  | 'DEAD_BALL';
+  | "DOT"
+  | "RUN_1"
+  | "RUN_2"
+  | "RUN_3"
+  | "RUN_4"
+  | "RUN_5"
+  | "RUN_6"
+  | "WICKET"
+  | "WIDE"
+  | "NO_BALL"
+  | "BYE"
+  | "LEG_BYE"
+  | "DEAD_BALL";
 
 export type DismissalType =
-  | 'BOWLED'
-  | 'CAUGHT'
-  | 'LBW'
-  | 'RUN_OUT'
-  | 'STUMPED'
-  | 'HIT_WICKET'
-  | 'RETIRED_HURT';
+  | "BOWLED"
+  | "CAUGHT"
+  | "LBW"
+  | "RUN_OUT"
+  | "STUMPED"
+  | "HIT_WICKET"
+  | "RETIRED_HURT";
 
 export interface DismissalInfo {
   type: DismissalType;
@@ -76,7 +76,9 @@ export interface BattingStats {
   sixes: number;
   isOut: boolean;
   dismissalType?: DismissalType;
-  howOut?: string; // human readable description
+  dismissalBowlerId?: string; // add this
+  dismissalFielderId?: string; // add this
+  howOut?: string; // (already existed, unused — can keep or drop)
 }
 
 export interface BowlingStats {
@@ -123,7 +125,11 @@ export interface InningsState {
 }
 
 // ---------- Match ----------
-export type MatchStatus = 'SETUP' | 'IN_PROGRESS' | 'INNINGS_BREAK' | 'COMPLETED';
+export type MatchStatus =
+  | "SETUP"
+  | "IN_PROGRESS"
+  | "INNINGS_BREAK"
+  | "COMPLETED";
 
 export interface MatchConfig {
   teamAName: string;

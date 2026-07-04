@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from "uuid";
 import type {
   BallEvent,
   BallOutcome,
@@ -7,7 +7,7 @@ import type {
   DismissalInfo,
   FieldingStats,
   InningsState,
-} from '@/types';
+} from "@/types";
 
 export interface RecordBallParams {
   outcome: BallOutcome;
@@ -47,9 +47,17 @@ function ensureBowling(innings: InningsState, playerId: string): BowlingStats {
   return innings.bowlingStats[playerId];
 }
 
-function ensureFielding(innings: InningsState, playerId: string): FieldingStats {
+function ensureFielding(
+  innings: InningsState,
+  playerId: string,
+): FieldingStats {
   if (!innings.fieldingStats[playerId]) {
-    innings.fieldingStats[playerId] = { playerId, catches: 0, runOuts: 0, stumpings: 0 };
+    innings.fieldingStats[playerId] = {
+      playerId,
+      catches: 0,
+      runOuts: 0,
+      stumpings: 0,
+    };
   }
   return innings.fieldingStats[playerId];
 }
@@ -78,7 +86,9 @@ export function applyBallEvent(
   const byeRuns = params.byeRuns ?? 0;
 
   if (!innings.strikerId || !innings.nonStrikerId || !innings.currentBowlerId) {
-    throw new Error('Striker, non-striker and bowler must be set before recording a ball');
+    throw new Error(
+      "Striker, non-striker and bowler must be set before recording a ball",
+    );
   }
 
   const strikerId = innings.strikerId;
@@ -94,13 +104,13 @@ export function applyBallEvent(
   let rotateStrike = false;
 
   switch (outcome) {
-    case 'DOT':
-    case 'RUN_1':
-    case 'RUN_2':
-    case 'RUN_3':
-    case 'RUN_4':
-    case 'RUN_5':
-    case 'RUN_6': {
+    case "DOT":
+    case "RUN_1":
+    case "RUN_2":
+    case "RUN_3":
+    case "RUN_4":
+    case "RUN_5":
+    case "RUN_6": {
       runsOffBat = RUN_OUTCOME_MAP[outcome] ?? 0;
       striker.runs += runsOffBat;
       striker.ballsFaced += 1;
@@ -112,26 +122,29 @@ export function applyBallEvent(
       rotateStrike = runsOffBat % 2 === 1;
       break;
     }
-    case 'WICKET': {
+    case "WICKET": {
       striker.ballsFaced += 1;
       striker.isOut = true;
       bowler.legalBalls += 1;
       if (dismissal) {
         striker.dismissalType = dismissal.type;
-        if (dismissal.type !== 'RUN_OUT') {
+        striker.dismissalBowlerId =
+          dismissal.type !== "RUN_OUT" ? dismissal.bowlerId : undefined;
+        striker.dismissalFielderId = dismissal.fielderId;
+        if (dismissal.type !== "RUN_OUT") {
           bowler.wickets += 1;
         }
         if (dismissal.fielderId) {
           const fielder = ensureFielding(innings, dismissal.fielderId);
-          if (dismissal.type === 'CAUGHT') fielder.catches += 1;
-          if (dismissal.type === 'RUN_OUT') fielder.runOuts += 1;
-          if (dismissal.type === 'STUMPED') fielder.stumpings += 1;
+          if (dismissal.type === "CAUGHT") fielder.catches += 1;
+          if (dismissal.type === "RUN_OUT") fielder.runOuts += 1;
+          if (dismissal.type === "STUMPED") fielder.stumpings += 1;
         }
       }
       innings.totalWickets += 1;
       break;
     }
-    case 'WIDE': {
+    case "WIDE": {
       isLegal = false;
       extraRuns = 1 + extraRunsOnTop;
       innings.extras.wides += 1;
@@ -140,7 +153,7 @@ export function applyBallEvent(
       rotateStrike = extraRunsOnTop % 2 === 1;
       break;
     }
-    case 'NO_BALL': {
+    case "NO_BALL": {
       isLegal = false;
       runsOffBat = extraRunsOnTop;
       striker.runs += runsOffBat;
@@ -154,7 +167,7 @@ export function applyBallEvent(
       rotateStrike = runsOffBat % 2 === 1;
       break;
     }
-    case 'BYE': {
+    case "BYE": {
       extraRuns = byeRuns;
       striker.ballsFaced += 1;
       innings.extras.byes += extraRuns;
@@ -162,7 +175,7 @@ export function applyBallEvent(
       rotateStrike = extraRuns % 2 === 1;
       break;
     }
-    case 'LEG_BYE': {
+    case "LEG_BYE": {
       extraRuns = byeRuns;
       striker.ballsFaced += 1;
       innings.extras.legByes += extraRuns;
@@ -170,7 +183,7 @@ export function applyBallEvent(
       rotateStrike = extraRuns % 2 === 1;
       break;
     }
-    case 'DEAD_BALL': {
+    case "DEAD_BALL": {
       isLegal = false;
       break;
     }
@@ -187,7 +200,9 @@ export function applyBallEvent(
     id: uuid(),
     inningsNumber: innings.inningsNumber,
     overNumber: Math.floor(innings.legalBallsBowled / ballsPerOver),
-    ballInOver: (innings.legalBallsBowled % ballsPerOver) || (isLegal ? ballsPerOver : innings.legalBallsBowled % ballsPerOver),
+    ballInOver:
+      innings.legalBallsBowled % ballsPerOver ||
+      (isLegal ? ballsPerOver : innings.legalBallsBowled % ballsPerOver),
     outcome,
     runsOffBat,
     extraRuns,
@@ -202,14 +217,15 @@ export function applyBallEvent(
   innings.ballHistory.push(event);
 
   // Rotate strike for odd runs
-  if (rotateStrike && outcome !== 'WICKET') {
+  if (rotateStrike && outcome !== "WICKET") {
     innings.strikerId = nonStrikerId;
     innings.nonStrikerId = strikerId;
   }
 
   // End of over: rotate strike automatically and require new bowler
   if (isLegal && innings.legalBallsBowled % ballsPerOver === 0) {
-    innings.strikerId = innings.nonStrikerId === strikerId ? nonStrikerId : innings.nonStrikerId;
+    innings.strikerId =
+      innings.nonStrikerId === strikerId ? nonStrikerId : innings.nonStrikerId;
     // simplest correct rotation at over-change: swap current striker/non-striker
     const s = innings.strikerId;
     const ns = innings.nonStrikerId;
@@ -222,6 +238,9 @@ export function applyBallEvent(
   return event;
 }
 
-export function totalOversLegalBalls(totalOvers: number, ballsPerOver: number): number {
+export function totalOversLegalBalls(
+  totalOvers: number,
+  ballsPerOver: number,
+): number {
   return totalOvers * ballsPerOver;
 }

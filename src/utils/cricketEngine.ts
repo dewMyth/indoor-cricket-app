@@ -85,14 +85,12 @@ export function applyBallEvent(
   const extraRunsOnTop = params.extraRunsOnTop ?? 0;
   const byeRuns = params.byeRuns ?? 0;
 
-  if (!innings.strikerId || !innings.nonStrikerId || !innings.currentBowlerId) {
-    throw new Error(
-      "Striker, non-striker and bowler must be set before recording a ball",
-    );
+  if (!innings.strikerId || !innings.currentBowlerId) {
+    throw new Error("Striker and bowler must be set before recording a ball");
   }
 
   const strikerId = innings.strikerId;
-  const nonStrikerId = innings.nonStrikerId;
+  const nonStrikerId = innings.nonStrikerId; // may be null when the last man is batting alone
   const bowlerId = innings.currentBowlerId;
 
   const striker = ensureBatting(innings, strikerId);
@@ -217,20 +215,19 @@ export function applyBallEvent(
   innings.ballHistory.push(event);
 
   // Rotate strike for odd runs
-  if (rotateStrike && outcome !== "WICKET") {
+  if (rotateStrike && outcome !== "WICKET" && nonStrikerId) {
     innings.strikerId = nonStrikerId;
     innings.nonStrikerId = strikerId;
   }
 
   // End of over: rotate strike automatically and require new bowler
   if (isLegal && innings.legalBallsBowled % ballsPerOver === 0) {
-    innings.strikerId =
-      innings.nonStrikerId === strikerId ? nonStrikerId : innings.nonStrikerId;
-    // simplest correct rotation at over-change: swap current striker/non-striker
-    const s = innings.strikerId;
-    const ns = innings.nonStrikerId;
-    innings.strikerId = ns;
-    innings.nonStrikerId = s;
+    if (!rotateStrike && nonStrikerId) {
+      const s = innings.strikerId;
+      const ns = innings.nonStrikerId;
+      innings.strikerId = ns;
+      innings.nonStrikerId = s;
+    }
     innings.previousBowlerId = innings.currentBowlerId;
     innings.currentBowlerId = null;
   }

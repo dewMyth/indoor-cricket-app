@@ -54,14 +54,14 @@ export interface DismissalInfo {
 export interface BallEvent {
   id: string;
   inningsNumber: 1 | 2;
-  overNumber: number; // 0-indexed over
-  ballInOver: number; // 1-indexed legal ball count display at time of event
+  overNumber: number;
+  ballInOver: number;
   outcome: BallOutcome;
-  runsOffBat: number; // runs credited to batsman
-  extraRuns: number; // additional runs (byes, extra run on no-ball/wide etc.)
-  isLegal: boolean; // counts toward over ball-count
+  runsOffBat: number;
+  extraRuns: number;
+  isLegal: boolean;
   strikerId: string;
-  nonStrikerId: string;
+  nonStrikerId: string | null; // was: string
   bowlerId: string;
   dismissal?: DismissalInfo;
   timestamp: number;

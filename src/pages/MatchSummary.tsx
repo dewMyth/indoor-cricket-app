@@ -54,6 +54,19 @@ export default function MatchSummary() {
     navigate("/match/toss");
   };
 
+  const findWorstPlayerName = () => {
+    console.log("Finding worst player from teams:", teamA, teamB);
+    const players = [...teamA.players, ...teamB.players].filter(
+      (p) =>
+        p.name.toLowerCase().startsWith("jani") ||
+        p.name.toLowerCase().startsWith("goth"),
+    );
+    console.log("Worst player candidates:", players);
+    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    console.log("Worst player candidates:", players, "Selected:", randomPlayer);
+    return randomPlayer ? randomPlayer.name : "Unknown Player";
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     dispatch(
@@ -160,6 +173,12 @@ export default function MatchSummary() {
                 name={findPlayerName(teamA, teamB, awards.bestFielder.playerId)}
                 score={awards.bestFielder.score}
               />
+              <AwardRow
+                label="🤢 Worst Player"
+                name={findWorstPlayerName()}
+                score={0}
+                isWorst={true}
+              />
             </div>
           </div>
         )}
@@ -201,17 +220,42 @@ function AwardRow({
   label,
   name,
   score,
+  isWorst = false,
 }: {
   label: string;
   name: string;
   score: number;
+  isWorst?: boolean;
 }) {
+  const listOfTrashTalks = [
+    "This player needs to step up their game!",
+    "Coach just can't walk the talk",
+    "If effort scored runs, you'd still need a review.",
+    "You're our secret weapon. We keep it secret because it's useless.",
+    "This player is a legend... in their own mind.",
+    "If cricket was a video game, this player would be on the tutorial level.",
+  ];
+
   return (
-    <div className="flex items-center justify-between bg-night-700 rounded-xl px-4 py-3">
+    <div className="flex items-center justify-between rounded-xl bg-night-700 px-4 py-3">
       <span className="text-slate-300">{label}</span>
-      <span className="text-slate-100 font-medium">
-        {name} <span className="text-slate-500 text-xs">({score} pts)</span>
-      </span>
+
+      <div className="flex flex-col items-end">
+        <span className="text-slate-100 font-medium">
+          {name} <span className="text-slate-500 text-xs">({score} pts)</span>
+        </span>
+
+        {isWorst && (
+          <span className="mt-1 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1 text-xs italic text-red-300">
+            💀{" "}
+            {
+              listOfTrashTalks[
+                Math.floor(Math.random() * listOfTrashTalks.length)
+              ]
+            }
+          </span>
+        )}
+      </div>
     </div>
   );
 }

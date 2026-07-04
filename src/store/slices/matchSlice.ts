@@ -222,19 +222,42 @@ const matchSlice = createSlice({
         match.config.ballsPerOver,
         action.payload,
       );
+      const battingTeam =
+        innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
 
       if (event.outcome === "WICKET") {
-        state.lastDismissedPlayerId = event.strikerId;
-        state.pendingNewBatsman = true;
+        const dismissedIds = new Set(
+          Object.values(innings.battingStats)
+            .filter((b) => b.isOut)
+            .map((b) => b.playerId),
+        );
+
+        const remainingPlayers = battingTeam.players.filter(
+          (p) => !dismissedIds.has(p.id) && p.id !== innings.nonStrikerId,
+        );
+
+        if (remainingPlayers.length === 0) {
+          if (innings.nonStrikerId) {
+            // Last man stands: promote the not-out partner, no replacement needed.
+            innings.strikerId = innings.nonStrikerId;
+            innings.nonStrikerId = null;
+            state.pendingNewBatsman = false;
+          } else {
+            // The last man has now been dismissed too - truly all out.
+            finalizeInnings(match, innings);
+            match.updatedAtISO = new Date().toISOString();
+            return; // stop here, don't fall through to the isInningsOver check below
+          }
+        } else {
+          state.lastDismissedPlayerId = event.strikerId;
+          state.pendingNewBatsman = true;
+        }
       }
 
       if (!innings.currentBowlerId) {
         state.pendingNewBowler = true;
       }
 
-      // Check innings completion
-      const battingTeam =
-        innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
       if (
         isInningsOver(innings, match.config, battingTeam.players.length) &&
         !state.pendingNewBatsman
@@ -273,6 +296,7 @@ const matchSlice = createSlice({
 
     swapStrikers(state) {
       const innings = currentInnings(state);
+      if (!innings.nonStrikerId) return; // nothing to swap with when the last man is batting alone
       const s = innings.strikerId;
       innings.strikerId = innings.nonStrikerId;
       innings.nonStrikerId = s;

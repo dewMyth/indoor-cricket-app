@@ -59,7 +59,7 @@ export function isInningsOver(
   totalPlayers: number,
 ): boolean {
   const maxLegalBalls = config.totalOvers * config.ballsPerOver;
-  const allOut = innings.totalWickets >= totalPlayers - 1; // last batsman needs a partner
+  const allOut = innings.totalWickets >= totalPlayers; // last man stands: everyone including the last man is out
   const oversUp = innings.legalBallsBowled >= maxLegalBalls;
   const targetChased =
     innings.inningsNumber === 2 &&

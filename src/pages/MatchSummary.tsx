@@ -9,6 +9,7 @@ import { pushToast, setLoading } from "@/store/slices/uiSlice";
 import { clearMatch } from "@/store/slices/matchSlice";
 import { rematchSameTeams } from "@/store/slices/matchSlice";
 import AIInsightsComponent from "@/components/common/AIInsights";
+import AIRoastGothayaComponent from "@/components/common/AIRoastGothaya";
 
 export default function MatchSummary() {
   const match = useAppSelector((s) => s.match.currentMatch);
@@ -239,6 +240,8 @@ function AwardRow({
     "If cricket was a video game, this player would be on the tutorial level.",
   ];
 
+  const match = useAppSelector((s) => s.match.currentMatch);
+
   return (
     <div className="flex items-center justify-between rounded-xl bg-night-700 px-4 py-3">
       <span className="text-slate-300">{label}</span>
@@ -251,11 +254,10 @@ function AwardRow({
         {isWorst && (
           <span className="mt-1 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1 text-xs italic text-red-300">
             💀{" "}
-            {
-              listOfTrashTalks[
-                Math.floor(Math.random() * listOfTrashTalks.length)
-              ]
-            }
+            <AIRoastGothayaComponent
+              matchData={JSON.stringify(match, null, 2)}
+              worstPlayer={name}
+            />
           </span>
         )}
       </div>

@@ -6,6 +6,7 @@ import { getMatch } from "@/firebase/firestoreService";
 import type { InningsState, MatchState } from "@/types";
 import { formatDismissal, formatOvers } from "@/utils/cricketUtils";
 import AIInsightsComponent from "@/components/common/AIInsights";
+import AIRoastOpposingTeamComponent from "@/components/common/AIRoastOpposeTeam";
 
 export default function MatchDetail() {
   const { matchId } = useParams();
@@ -58,6 +59,10 @@ export default function MatchDetail() {
             innings={innings!}
           />
         ))}
+
+        <AIRoastOpposingTeamComponent
+          matchData={JSON.stringify(match, null, 2)}
+        />
 
         <AIInsightsComponent matchData={JSON.stringify(match, null, 2)} />
 

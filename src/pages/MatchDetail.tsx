@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Navbar from '@/components/common/Navbar';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { getMatch } from '@/firebase/firestoreService';
-import type { InningsState, MatchState } from '@/types';
-import { formatOvers } from '@/utils/cricketUtils';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Navbar from "@/components/common/Navbar";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { getMatch } from "@/firebase/firestoreService";
+import type { InningsState, MatchState } from "@/types";
+import { formatDismissal, formatOvers } from "@/utils/cricketUtils";
+import AIInsightsComponent from "@/components/common/AIInsights";
 
 export default function MatchDetail() {
   const { matchId } = useParams();
@@ -42,17 +43,28 @@ export default function MatchDetail() {
         {match.winnerTeamId && (
           <div className="card p-4 text-center bg-pitch-500/10 border-pitch-400/40">
             <p className="font-display font-semibold text-slate-100">
-              {match.winnerTeamId === match.teamA.id ? match.teamA.name : match.teamB.name} won{' '}
-              {match.winnerMargin ? `by ${match.winnerMargin}` : ''}
+              {match.winnerTeamId === match.teamA.id
+                ? match.teamA.name
+                : match.teamB.name}{" "}
+              won {match.winnerMargin ? `by ${match.winnerMargin}` : ""}
             </p>
           </div>
         )}
 
         {[match.innings1, match.innings2].filter(Boolean).map((innings) => (
-          <InningsCard key={innings!.inningsNumber} match={match} innings={innings!} />
+          <InningsCard
+            key={innings!.inningsNumber}
+            match={match}
+            innings={innings!}
+          />
         ))}
 
-        <button onClick={() => navigate('/history')} className="btn-secondary w-full">
+        <AIInsightsComponent matchData={JSON.stringify(match, null, 2)} />
+
+        <button
+          onClick={() => navigate("/history")}
+          className="btn-secondary w-full"
+        >
           Back to History
         </button>
       </main>
@@ -60,15 +72,25 @@ export default function MatchDetail() {
   );
 }
 
-function InningsCard({ match, innings }: { match: MatchState; innings: InningsState }) {
-  const battingTeam = innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
+function InningsCard({
+  match,
+  innings,
+}: {
+  match: MatchState;
+  innings: InningsState;
+}) {
+  const battingTeam =
+    innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
 
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-display font-semibold text-lg text-slate-100">{battingTeam.name}</h3>
+        <h3 className="font-display font-semibold text-lg text-slate-100">
+          {battingTeam.name}
+        </h3>
         <span className="scoreboard-digit text-slate-200">
-          {innings.totalRuns}/{innings.totalWickets} ({formatOvers(innings.legalBallsBowled, match.config.ballsPerOver)} ov)
+          {innings.totalRuns}/{innings.totalWickets} (
+          {formatOvers(innings.legalBallsBowled, match.config.ballsPerOver)} ov)
         </span>
       </div>
 
@@ -88,10 +110,20 @@ function InningsCard({ match, innings }: { match: MatchState; innings: InningsSt
             return (
               <tr key={b.playerId} className="border-t border-night-500/60">
                 <td className="py-1.5 text-slate-200">
-                  {player?.name ?? 'Unknown'} {!b.isOut && <span className="text-pitch-400 text-xs">*</span>}
+                  <div>
+                    {player?.name ?? "Unknown"}{" "}
+                    {!b.isOut && (
+                      <span className="text-pitch-400 text-xs">*</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {formatDismissal(b, match.teamA, match.teamB)}
+                  </div>
                 </td>
                 <td className="py-1.5 text-right text-slate-200">{b.runs}</td>
-                <td className="py-1.5 text-right text-slate-400">{b.ballsFaced}</td>
+                <td className="py-1.5 text-right text-slate-400">
+                  {b.ballsFaced}
+                </td>
                 <td className="py-1.5 text-right text-slate-400">{b.fours}</td>
                 <td className="py-1.5 text-right text-slate-400">{b.sixes}</td>
               </tr>
@@ -101,8 +133,13 @@ function InningsCard({ match, innings }: { match: MatchState; innings: InningsSt
       </table>
 
       <p className="text-xs text-slate-500 mb-3">
-        Extras: {innings.extras.wides + innings.extras.noBalls + innings.extras.byes + innings.extras.legByes} (wd{' '}
-        {innings.extras.wides}, nb {innings.extras.noBalls}, b {innings.extras.byes}, lb {innings.extras.legByes})
+        Extras:{" "}
+        {innings.extras.wides +
+          innings.extras.noBalls +
+          innings.extras.byes +
+          innings.extras.legByes}{" "}
+        (wd {innings.extras.wides}, nb {innings.extras.noBalls}, b{" "}
+        {innings.extras.byes}, lb {innings.extras.legByes})
       </p>
 
       <table className="w-full text-sm">
@@ -116,14 +153,27 @@ function InningsCard({ match, innings }: { match: MatchState; innings: InningsSt
         </thead>
         <tbody>
           {Object.values(innings.bowlingStats).map((bw) => {
-            const bowlingTeam = innings.bowlingTeamId === match.teamA.id ? match.teamA : match.teamB;
-            const player = bowlingTeam.players.find((p) => p.id === bw.playerId);
+            const bowlingTeam =
+              innings.bowlingTeamId === match.teamA.id
+                ? match.teamA
+                : match.teamB;
+            const player = bowlingTeam.players.find(
+              (p) => p.id === bw.playerId,
+            );
             return (
               <tr key={bw.playerId} className="border-t border-night-500/60">
-                <td className="py-1.5 text-slate-200">{player?.name ?? 'Unknown'}</td>
-                <td className="py-1.5 text-right text-slate-400">{formatOvers(bw.legalBalls, match.config.ballsPerOver)}</td>
-                <td className="py-1.5 text-right text-slate-400">{bw.runsConceded}</td>
-                <td className="py-1.5 text-right text-slate-200">{bw.wickets}</td>
+                <td className="py-1.5 text-slate-200">
+                  {player?.name ?? "Unknown"}
+                </td>
+                <td className="py-1.5 text-right text-slate-400">
+                  {formatOvers(bw.legalBalls, match.config.ballsPerOver)}
+                </td>
+                <td className="py-1.5 text-right text-slate-400">
+                  {bw.runsConceded}
+                </td>
+                <td className="py-1.5 text-right text-slate-200">
+                  {bw.wickets}
+                </td>
               </tr>
             );
           })}

@@ -8,6 +8,7 @@ import { uploadMatchReport } from "@/firebase/storageService";
 import { pushToast, setLoading } from "@/store/slices/uiSlice";
 import { clearMatch } from "@/store/slices/matchSlice";
 import { rematchSameTeams } from "@/store/slices/matchSlice";
+import AIInsightsComponent from "@/components/common/AIInsights";
 
 export default function MatchSummary() {
   const match = useAppSelector((s) => s.match.currentMatch);
@@ -183,13 +184,15 @@ export default function MatchSummary() {
           </div>
         )}
 
-        <button
+        {/* <button
           onClick={handleExport}
           disabled={isExporting}
           className="btn-secondary w-full disabled:opacity-50"
         >
           {isExporting ? "Exporting..." : "Export Match Report"}
-        </button>
+        </button> */}
+
+        <AIInsightsComponent matchData={JSON.stringify(match, null, 2)} />
 
         <button
           onClick={() => navigate(`/history/${match.id}`)}

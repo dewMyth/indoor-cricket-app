@@ -1,21 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '@/components/common/Navbar';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { getMatchHistory } from '@/firebase/firestoreService';
-import { setHistoryLoading, setHistoryMatches } from '@/store/slices/historySlice';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/common/Navbar";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { getMatchHistory } from "@/firebase/firestoreService";
+import {
+  setHistoryLoading,
+  setHistoryMatches,
+} from "@/store/slices/historySlice";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function MatchHistory() {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { matches, isLoading } = useAppSelector((s) => s.history);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!user) return;
+    console.log("Fetching match history for user:", user.uid);
     dispatch(setHistoryLoading(true));
     getMatchHistory(user.uid)
       .then((data) => dispatch(setHistoryMatches(data)))
@@ -63,13 +67,22 @@ export default function MatchHistory() {
                     {m.teamAName} vs {m.teamBName}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {new Date(m.date).toLocaleDateString()} {m.venue ? `· ${m.venue}` : ''}
+                    {new Date(m.date).toLocaleDateString()}{" "}
+                    {m.venue ? `· ${m.venue}` : ""}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="scoreboard-digit text-slate-200 font-medium">{m.finalScoreLabel}</p>
-                  {m.winnerTeamName && <p className="text-xs text-pitch-400">{m.winnerTeamName} won</p>}
-                  {m.status !== 'COMPLETED' && <p className="text-xs text-sixer-400">In progress</p>}
+                  <p className="scoreboard-digit text-slate-200 font-medium">
+                    {m.finalScoreLabel}
+                  </p>
+                  {m.winnerTeamName && (
+                    <p className="text-xs text-pitch-400">
+                      {m.winnerTeamName} won
+                    </p>
+                  )}
+                  {m.status !== "COMPLETED" && (
+                    <p className="text-xs text-sixer-400">In progress</p>
+                  )}
                 </div>
               </button>
             ))}

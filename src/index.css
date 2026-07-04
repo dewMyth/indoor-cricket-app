@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.night.400');
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .btn-score {
+    @apply flex items-center justify-center rounded-2xl font-display font-semibold text-lg select-none
+      transition-transform duration-100 active:scale-95 shadow-md;
+  }
+
+  .card {
+    @apply bg-night-600 border border-night-500/60 rounded-2xl shadow-lg;
+  }
+
+  .input-field {
+    @apply w-full bg-night-700 border border-night-500 rounded-xl px-4 py-3 text-slate-100
+      placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-pitch-400/70 focus:border-pitch-400
+      transition-colors;
+  }
+
+  .label-field {
+    @apply block text-sm font-medium text-slate-400 mb-1.5;
+  }
+
+  .btn-primary {
+    @apply bg-pitch-400 hover:bg-pitch-500 text-night-900 font-display font-semibold rounded-xl
+      px-5 py-3 transition-colors shadow-glow active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply bg-night-500 hover:bg-night-400 text-slate-100 font-display font-semibold rounded-xl
+      px-5 py-3 transition-colors active:scale-[0.98];
+  }
+
+  .scoreboard-digit {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+}

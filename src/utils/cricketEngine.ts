@@ -93,6 +93,11 @@ export function applyBallEvent(
   const nonStrikerId = innings.nonStrikerId; // may be null when the last man is batting alone
   const bowlerId = innings.currentBowlerId;
 
+  // Snapshot the ball count *before* this delivery - this over/ball position
+  // belongs to the over currently in progress, regardless of whether this
+  // particular ball ends up being the last legal one in it.
+  const ballsBeforeThisDelivery = innings.legalBallsBowled;
+
   const striker = ensureBatting(innings, strikerId);
   const bowler = ensureBowling(innings, bowlerId);
 
@@ -220,10 +225,8 @@ export function applyBallEvent(
   const event: BallEvent = {
     id: uuid(),
     inningsNumber: innings.inningsNumber,
-    overNumber: Math.floor(innings.legalBallsBowled / ballsPerOver),
-    ballInOver:
-      innings.legalBallsBowled % ballsPerOver ||
-      (isLegal ? ballsPerOver : innings.legalBallsBowled % ballsPerOver),
+    overNumber: Math.floor(ballsBeforeThisDelivery / ballsPerOver),
+    ballInOver: (ballsBeforeThisDelivery % ballsPerOver) + 1,
     outcome,
     runsOffBat,
     extraRuns,

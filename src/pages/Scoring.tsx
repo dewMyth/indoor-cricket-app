@@ -34,6 +34,9 @@ export default function Scoring() {
   const undoStackLength = useAppSelector((s) => s.match.undoStack.length);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const pendingBatsmanReplacesStriker = useAppSelector(
+    (s) => s.match.pendingBatsmanReplacesStriker,
+  );
 
   useAutoSaveMatch();
 
@@ -85,13 +88,16 @@ export default function Scoring() {
   const handleWicketConfirm = (payload: {
     type: DismissalType;
     fielderId?: string;
+    batsmanId: string;
+    runsCompleted?: number;
   }) => {
     dispatch(
       recordBall({
         outcome: "WICKET",
+        runsCompleted: payload.runsCompleted,
         dismissal: {
           type: payload.type,
-          batsmanId: innings.strikerId!,
+          batsmanId: payload.batsmanId,
           bowlerId: innings.currentBowlerId!,
           fielderId: payload.fielderId,
         },
@@ -193,7 +199,18 @@ export default function Scoring() {
       {wicketModalOpen && (
         <WicketModal
           bowlingTeam={bowlingTeam}
-          currentBowlerId={innings.currentBowlerId!}
+          strikerId={innings.strikerId!}
+          strikerName={findPlayerName(
+            match.teamA,
+            match.teamB,
+            innings.strikerId ?? undefined,
+          )}
+          nonStrikerId={innings.nonStrikerId}
+          nonStrikerName={
+            innings.nonStrikerId
+              ? findPlayerName(match.teamA, match.teamB, innings.nonStrikerId)
+              : null
+          }
           onConfirm={handleWicketConfirm}
           onCancel={() => setWicketModalOpen(false)}
         />
@@ -209,7 +226,12 @@ export default function Scoring() {
           )}
           unavailablePlayerIds={battingLineupOutOrIn}
           onConfirm={(playerId) =>
-            dispatch(confirmNewBatsman({ playerId, replacesStriker: true }))
+            dispatch(
+              confirmNewBatsman({
+                playerId,
+                replacesStriker: pendingBatsmanReplacesStriker,
+              }),
+            )
           }
         />
       )}

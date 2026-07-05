@@ -17,9 +17,10 @@ import {
 
 interface MatchSliceState {
   currentMatch: MatchState | null;
-  undoStack: InningsState[]; // snapshots of the current innings before each ball
+  undoStack: InningsState[];
   pendingNewBatsman: boolean;
   pendingNewBowler: boolean;
+  pendingBatsmanReplacesStriker: boolean; // add this
   lastDismissedPlayerId?: string;
 }
 
@@ -28,6 +29,7 @@ const initialState: MatchSliceState = {
   undoStack: [],
   pendingNewBatsman: false,
   pendingNewBowler: false,
+  pendingBatsmanReplacesStriker: true, // initialize to true
 };
 
 function createEmptyInnings(
@@ -106,6 +108,7 @@ const matchSlice = createSlice({
       state.undoStack = [];
       state.pendingNewBatsman = false;
       state.pendingNewBowler = false;
+      state.pendingBatsmanReplacesStriker = true; // add this
     },
 
     rematchSameTeams(state) {
@@ -134,6 +137,7 @@ const matchSlice = createSlice({
       state.undoStack = [];
       state.pendingNewBatsman = false;
       state.pendingNewBowler = false;
+      state.pendingBatsmanReplacesStriker = true; // add this
     },
 
     loadMatch(state, action: PayloadAction<MatchState>) {
@@ -141,6 +145,7 @@ const matchSlice = createSlice({
       state.undoStack = [];
       state.pendingNewBatsman = false;
       state.pendingNewBowler = false;
+      state.pendingBatsmanReplacesStriker = true; // add this
     },
 
     clearMatch(state) {
@@ -207,6 +212,7 @@ const matchSlice = createSlice({
       state.undoStack = [];
       state.pendingNewBatsman = false;
       state.pendingNewBowler = false;
+      state.pendingBatsmanReplacesStriker = true; // add this
     },
 
     recordBall(state, action: PayloadAction<RecordBallParams>) {
@@ -226,30 +232,39 @@ const matchSlice = createSlice({
         innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
 
       if (event.outcome === "WICKET") {
+        const dismissedId = event.dismissal?.batsmanId ?? event.strikerId;
+
         const dismissedIds = new Set(
           Object.values(innings.battingStats)
             .filter((b) => b.isOut)
             .map((b) => b.playerId),
         );
-
+        const currentCreaseIds = new Set(
+          [innings.strikerId, innings.nonStrikerId].filter(Boolean) as string[],
+        );
         const remainingPlayers = battingTeam.players.filter(
-          (p) => !dismissedIds.has(p.id) && p.id !== innings.nonStrikerId,
+          (p) => !dismissedIds.has(p.id) && !currentCreaseIds.has(p.id),
         );
 
         if (remainingPlayers.length === 0) {
-          if (innings.nonStrikerId) {
-            // Last man stands: promote the not-out partner, no replacement needed.
-            innings.strikerId = innings.nonStrikerId;
+          const survivorId =
+            innings.strikerId === dismissedId
+              ? innings.nonStrikerId
+              : innings.strikerId;
+          if (survivorId) {
+            // Last man stands: promote the survivor, no replacement needed.
+            innings.strikerId = survivorId;
             innings.nonStrikerId = null;
             state.pendingNewBatsman = false;
           } else {
-            // The last man has now been dismissed too - truly all out.
             finalizeInnings(match, innings);
             match.updatedAtISO = new Date().toISOString();
-            return; // stop here, don't fall through to the isInningsOver check below
+            return;
           }
         } else {
-          state.lastDismissedPlayerId = event.strikerId;
+          state.lastDismissedPlayerId = dismissedId;
+          state.pendingBatsmanReplacesStriker =
+            innings.strikerId === dismissedId;
           state.pendingNewBatsman = true;
         }
       }
@@ -280,7 +295,7 @@ const matchSlice = createSlice({
         innings.nonStrikerId = action.payload.playerId;
       }
       state.pendingNewBatsman = false;
-
+      state.pendingBatsmanReplacesStriker = false;
       const battingTeam =
         innings.battingTeamId === match.teamA.id ? match.teamA : match.teamB;
       if (isInningsOver(innings, match.config, battingTeam.players.length)) {
@@ -314,6 +329,7 @@ const matchSlice = createSlice({
       }
       state.pendingNewBatsman = false;
       state.pendingNewBowler = !snapshot.currentBowlerId;
+      state.pendingBatsmanReplacesStriker = false;
       match.status = "IN_PROGRESS";
     },
 

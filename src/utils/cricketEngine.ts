@@ -11,10 +11,10 @@ import type {
 
 export interface RecordBallParams {
   outcome: BallOutcome;
-  /** Runs run by the batsmen in addition to a wide/no-ball penalty (e.g. "2 wides" -> extraRunsOnTop = 2). */
   extraRunsOnTop?: number;
-  /** Runs awarded for a bye / leg-bye. */
   byeRuns?: number;
+  /** Runs completed by the batsmen before a run-out occurred. */
+  runsCompleted?: number;
   dismissal?: DismissalInfo;
 }
 
@@ -122,13 +122,36 @@ export function applyBallEvent(
     }
     case "WICKET": {
       striker.ballsFaced += 1;
-      striker.isOut = true;
       bowler.legalBalls += 1;
+
+      const isRunOut = dismissal?.type === "RUN_OUT";
+      const runsCompleted = isRunOut ? (params.runsCompleted ?? 0) : 0;
+
+      if (runsCompleted > 0) {
+        // Runs completed before a run-out are credited to whoever was on strike,
+        // same as normal running between wickets, and count against the bowler.
+        runsOffBat = runsCompleted;
+        striker.runs += runsOffBat;
+        bowler.runsConceded += runsOffBat;
+        if (runsOffBat === 4) striker.fours += 1;
+        if (runsOffBat === 6) striker.sixes += 1;
+      }
+
+      // The batsmen cross ends once per completed run - mirror that so we can
+      // work out which physical end (striker/non-striker slot) is now vacant.
+      if (isRunOut && runsCompleted % 2 === 1 && nonStrikerId) {
+        innings.strikerId = nonStrikerId;
+        innings.nonStrikerId = strikerId;
+      }
+
       if (dismissal) {
-        striker.dismissalType = dismissal.type;
-        striker.dismissalBowlerId =
+        const dismissedBatting = ensureBatting(innings, dismissal.batsmanId);
+        dismissedBatting.isOut = true;
+        dismissedBatting.dismissalType = dismissal.type;
+        dismissedBatting.dismissalBowlerId =
           dismissal.type !== "RUN_OUT" ? dismissal.bowlerId : undefined;
-        striker.dismissalFielderId = dismissal.fielderId;
+        dismissedBatting.dismissalFielderId = dismissal.fielderId;
+
         if (dismissal.type !== "RUN_OUT") {
           bowler.wickets += 1;
         }

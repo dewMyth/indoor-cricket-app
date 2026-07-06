@@ -17,6 +17,8 @@ export default function MatchSummary() {
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
 
+  const tournament = useAppSelector((s) => s.tournament.currentTournament);
+
   useEffect(() => {
     if (!match) navigate("/dashboard");
     else if (match.status !== "COMPLETED") navigate("/match/score");
@@ -97,6 +99,9 @@ export default function MatchSummary() {
       dispatch(setLoading({ isLoading: false }));
     }
   };
+
+  console.log("Tournament ID:", "Tournament:", tournament);
+  console.log("Match tournament ID:", match.tournamentId);
 
   return (
     <div className="min-h-screen bg-night-800">
@@ -205,6 +210,15 @@ export default function MatchSummary() {
         <button onClick={handleRematch} className="btn-secondary w-full">
           Rematch with Same Teams
         </button>
+
+        {match.tournamentId && tournament && (
+          <button
+            onClick={() => navigate("/tournament/dashboard")}
+            className="btn-primary w-full"
+          >
+            Back to {tournament.name}
+          </button>
+        )}
 
         <button
           onClick={() => {

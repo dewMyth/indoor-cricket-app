@@ -1,8 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
-import matchReducer from './slices/matchSlice';
-import uiReducer from './slices/uiSlice';
-import historyReducer from './slices/historySlice';
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./slices/authSlice";
+import matchReducer from "./slices/matchSlice";
+import uiReducer from "./slices/uiSlice";
+import historyReducer from "./slices/historySlice";
+import tournamentReducer from "./slices/tournamentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     match: matchReducer,
     ui: uiReducer,
     history: historyReducer,
+    tournament: tournamentReducer,
   },
 });
 

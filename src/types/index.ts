@@ -149,6 +149,7 @@ export interface MatchAwards {
 export interface MatchState {
   id: string;
   ownerUid: string;
+  tournamentId?: string;
   config: MatchConfig;
   teamA: Team;
   teamB: Team;
@@ -178,4 +179,57 @@ export interface MatchHistorySummary {
   winnerTeamName?: string;
   finalScoreLabel: string;
   status: MatchStatus;
+}
+
+export interface TournamentTeamAggregate {
+  teamName: string;
+  played: number;
+  won: number;
+  lost: number;
+  tied: number;
+  points: number; // 2 per win, 1 per tie
+}
+
+export interface TournamentPlayerAggregate {
+  playerName: string;
+  teamName: string;
+  matchesPlayed: number;
+  runs: number;
+  ballsFaced: number;
+  fours: number;
+  sixes: number;
+  wickets: number;
+  legalBalls: number;
+  runsConceded: number;
+  dots: number;
+  catches: number;
+  runOuts: number;
+  stumpings: number;
+  battingScore: number;
+  bowlingScore: number;
+  fieldingScore: number;
+  totalScore: number;
+}
+
+export interface TournamentStandings {
+  teams: TournamentTeamAggregate[];
+  seriesWinnerTeamName?: string;
+  seriesMvp?: TournamentPlayerAggregate;
+  bestBatsman?: TournamentPlayerAggregate;
+  bestBowler?: TournamentPlayerAggregate;
+  bestFielder?: TournamentPlayerAggregate;
+  orangeCap: TournamentPlayerAggregate[]; // top run scorers, desc
+  purpleCap: TournamentPlayerAggregate[]; // top wicket takers, desc
+}
+
+export type TournamentStatus = "ACTIVE" | "COMPLETED";
+
+export interface TournamentState {
+  id: string;
+  ownerUid: string;
+  name: string;
+  status: TournamentStatus;
+  createdAtISO: string;
+  completedAtISO?: string;
+  standings?: TournamentStandings;
 }

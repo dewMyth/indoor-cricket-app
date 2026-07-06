@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/common/Navbar";
 import { useAppDispatch } from "@/store/hooks";
 import { createMatch } from "@/store/slices/matchSlice";
@@ -8,6 +8,10 @@ import { v4 as uuid } from "uuid";
 
 export default function CreateMatch() {
   const { user } = useAuth();
+
+  const location = useLocation();
+  const tournamentId = (location.state as { tournamentId?: string } | null)
+    ?.tournamentId;
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -42,6 +46,7 @@ export default function CreateMatch() {
         },
         teamA: { id: uuid(), name: teamAName.trim(), players: [] },
         teamB: { id: uuid(), name: teamBName.trim(), players: [] },
+        tournamentId,
       }),
     );
     navigate("/match/teams");

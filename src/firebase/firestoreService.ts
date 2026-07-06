@@ -11,7 +11,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./config";
-import type { MatchState, MatchHistorySummary } from "@/types";
+import type { MatchState, MatchHistorySummary, TournamentState } from "@/types";
 
 const MATCHES_COLLECTION = "matches";
 
@@ -83,4 +83,47 @@ export function summarizeMatch(match: MatchState): MatchHistorySummary {
 
 export async function deleteMatch(matchId: string): Promise<void> {
   await deleteDoc(doc(db, MATCHES_COLLECTION, matchId));
+}
+
+const TOURNAMENTS_COLLECTION = "tournaments";
+
+export async function saveTournament(
+  tournament: TournamentState,
+): Promise<void> {
+  const ref = doc(db, TOURNAMENTS_COLLECTION, tournament.id);
+  await setDoc(ref, tournament, { merge: true });
+}
+
+export async function getTournament(
+  tournamentId: string,
+): Promise<TournamentState | null> {
+  const ref = doc(db, TOURNAMENTS_COLLECTION, tournamentId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? (snap.data() as TournamentState) : null;
+}
+
+export async function getTournaments(
+  ownerUid: string,
+): Promise<TournamentState[]> {
+  const q = query(
+    collection(db, TOURNAMENTS_COLLECTION),
+    where("ownerUid", "==", ownerUid),
+    orderBy("createdAtISO", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as TournamentState);
+}
+
+export async function getTournamentMatches(
+  tournamentId: string,
+  ownerUid: string,
+): Promise<MatchState[]> {
+  const q = query(
+    collection(db, MATCHES_COLLECTION),
+    where("ownerUid", "==", ownerUid),
+    where("tournamentId", "==", tournamentId),
+    orderBy("createdAtISO", "asc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as MatchState);
 }

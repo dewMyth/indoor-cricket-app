@@ -85,13 +85,15 @@ const matchSlice = createSlice({
         config: MatchConfig;
         teamA: Team;
         teamB: Team;
+        tournamentId?: string;
       }>,
     ) {
-      const { ownerUid, config, teamA, teamB } = action.payload;
+      const { ownerUid, config, teamA, teamB, tournamentId } = action.payload;
       const now = new Date();
       const match: MatchState = {
         id: uuid(),
         ownerUid,
+        tournamentId,
         config,
         teamA,
         teamB,
